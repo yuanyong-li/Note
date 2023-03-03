@@ -47,6 +47,8 @@
 
 * Your code is now pushed to GitHub. Be sure to include `origin master`, as this tells GitHub which branch you want to push to, and creates the branch if it doesn't exist yet.
 
+* `git push -f origin master`: 强制上传
+
 ### 3. fork and clone
 
 `git clone [url]`
