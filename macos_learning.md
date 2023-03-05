@@ -10,8 +10,9 @@
 
 `fn+backspace`: delete 
 
-`cmd+\+`: 某些应用(terminal)字体变大
-`cmd+\-`: 某些应用字体变小
+`双指+option`: 复制文件路径
+
+`ctrl+shift+345`: 截图
 
 ### 已掌握
 
@@ -20,6 +21,9 @@
 `cmd+q`: 关闭当前应用
 `cmd+m`: 隐藏当前应用
 `cmd+w`: 关闭当前窗口
+
+`cmd+\+`: 某些应用(terminal)字体变大
+`cmd+\-`: 某些应用字体变小
 
 `cmd+space`: 搜索
 
