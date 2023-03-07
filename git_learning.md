@@ -129,6 +129,7 @@
 * 等同于`rm <file>`和`git add <file>`
 * `rm <file>`可以`git checkout -- <file>`
 * `git rm <file>`可以`git reset HEAD <file>`以及`git checkout -- <file>`
+* `git rm
 
 `git status`
 
@@ -146,6 +147,16 @@
 `git reset --hard commit_id`
 
 * 回退到指定版本号
+
+### 7. 小操作
+
+`git ls-files`:
+
+* 查看暂存区内的文件
+* `git ls-files -c`: 默认参数，-cached
+* `-deleted(-d)`
+* `-modified(-m)`
+* `-other(-o)`
 
 ## 小知识
 
