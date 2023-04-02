@@ -1,3 +1,23 @@
+# 2023-04-02
+
+GRU：门控循环单元
+LSTM：长短期记忆
+
+Bidirectional RNN：双向RNN
+
+## NLP
+
+词嵌入、矩阵嵌入
+Word2Vec、Skip-Gram、GloVe（没太懂。有些复杂）
+
+*突然有的想法。既然可以训练word-embedding矩阵，且是不可解释的。能否转换为可解释的字段。*
+
+词嵌入偏差去除（深度学习中的政治正确）
+
+## seq2seq
+
+Beam search
+
 # 2023-04-01
 
 Semantic Segmentation（语义分割）：精准判断每个像素属于哪个类别
