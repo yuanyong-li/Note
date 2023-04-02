@@ -129,7 +129,7 @@
 * 等同于`rm <file>`和`git add <file>`
 * `rm <file>`可以`git checkout -- <file>`
 * `git rm <file>`可以`git reset HEAD <file>`以及`git checkout -- <file>`
-* `git rm
+* `git rm -r --cached file`: 删除暂存区内某个文件，再push
 
 `git status`
 
@@ -164,3 +164,4 @@
 - 版本库：在工作区有一个隐藏目录`.git`，是Git的版本库。
 - `git add`实际上是把文件添加到暂存区
 - `git commit`实际上是把暂存区的所有内容提交到当前分支
+- 手动创建 .gitignore文件，里面写要忽略的文件

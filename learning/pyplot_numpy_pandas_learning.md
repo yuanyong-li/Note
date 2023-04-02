@@ -237,6 +237,23 @@ print(temp.std(axis=0)) #标准差
 new_temp = temp.copy() #深拷贝，temp和new_temp互不影响
 ```
 
+## numpy.matrix
+
+```python
+import numpy as np
+
+x = np.arange(10)
+y = np.arange(10)
+print(x * y) #点乘
+print(x @ y) #叉乘，并会把第二个向量自动转置
+x = np.matrix(x) #转向量为矩阵
+y = np.matrix(y)
+print(np.multiply(x,y))
+print(x * y) #矩阵乘法sdfadsfadfjkjkjkjkjjkjkjkfdgjdfgdfgd
+```
+
+
+
 ## numpy的nan和inf
 
 **nan**：not a number
@@ -254,20 +271,6 @@ new_temp = temp.copy() #深拷贝，temp和new_temp互不影响
     用处：np.count_nonzero(np.isnan(t))
 
 2. nan和任何值计算都为nan
-## 一些常用函数
-
-1. isin
-
-   ```python
-   a = np.array([
-       [1,2,3],
-       [4,5,6],
-       [7,8,9]
-   ])
-   b = [3,4,5,6,7]
-   print(np.isin(a,b))
-   ```
-
 ## 实例
 
 $$
@@ -285,6 +288,285 @@ def cost(theta, X, y):
     second = np.multiply((1 - y), np.log(1 - sigmoid(X * theta.T)))
     return np.sum(first - second) / (len(X))
 ```
+
+## groupby transform
+
+```python
+import pandas as pd
+import numpy as np
+
+employees = ["小明","小周","小孙"]   # 3位员工
+
+dict = {
+    "employees":[employees[x] for x in np.random.randint(0,len(employees),9)],  # 在员工中重复选择9个人
+    "salary":np.random.randint(800,1000,9),  # 800-1000之间的薪资选择9个数值
+    "score":np.random.randint(6,11,9)  # 6-11的分数选择9个
+}
+
+df=pd.DataFrame(dict)
+print(df.groupby(by='employees').agg({'salary':'mean'}))
+temp = df.groupby(by='employees').agg({'salary':'mean'}).rename({'salary':'salary_mean'},axis='columns').reset_index()
+print(df.merge(temp,how='inner',on='employees'))
+# 等价于
+df['salary_mean'] = df.groupby(by='employees')['salary'].transform('mean')
+print(df)
+```
+
+
+
+## 函数
+
+### numpy.fun基本函数
+
+`numpy.array`
+
+```python
+numpy.array(object, dtype = None, copy = True, order = None, subok = False, ndmin = 0)
+"""
+dtype: 数据类型
+copy: 对象是否复制
+ndmin: 最小维度
+"""
+```
+
+`numpy.isin`
+```python
+a = np.array([[1,2,3],[4,5,6],[7,8,9]])
+b = [3,4,5,6,7]
+print(np.isin(a,b))
+```
+
+数组属性
+
+```python
+ndarray.ndim	#秩，即轴的数量或维度的数量
+ndarray.shape	#数组的维度，对于矩阵，n 行 m 列
+ndarray.size	#数组元素的总个数，相当于 .shape 中 n*m 的值
+```
+
+`numpy.ones`
+`numpy.zeros`
+```python
+numpy.zeros(shape, dtype = float, order = 'C')
+"""
+shape: 元组
+order: C按行，F按列，A原顺序，K内存顺序
+"""
+```
+
+`numpy.arange`
+`numpy.linspace`: 生成等差数列
+`numpy.logspace`: 生成等比数列
+```python
+numpy.arange(start, stop, step, dtype)
+```
+
+`numpy.nditer`
+```python
+a = np.arange(6).reshape(2,3)
+for x in np.nditer(a.T):
+	print(x, end=',') # 0,1,2,3,4,5 
+for x in np.nditer(a.T.copy(order='C')):
+	print(x, end=',') # 0,3,1,4,2,5
+```
+
+`numpy.flat`
+`numpy.flatten`
+`numpy.ravel`
+```python
+x = np.arange(32)
+x = x.reshape(4,8)
+for e in x.flat:
+  e *= 2 # 修改会直接影响原数组
+  print(e, end=',')
+for e in x.flatten(order = 'F'):
+  e *= 2 # 生成拷贝，不修改原属组，order同上
+  print(e, end=',')
+for e in x.ravel(order = 'C'):
+  print(e, end=',')
+```
+
+`concatenate((a1,a2), axis)`: 沿指定轴连接相同形状的两个或多个数组
+`broadcast_to(array, shape)`: 广播扩展为指定形状
+`stack(arrays, axis)`: 堆叠后维度会变化
+`hstack(arrays)`: 水平堆叠，维度不变
+`vstack(arrays)`: 垂直堆叠，维度不变
+
+`numpy.split(ary, indices_or_sections, axis)`
+`numpy.hsplit()`
+`numpy.vsplit()`
+
+```python
+import numpy as np
+
+var = np.random.randint(0,4,(6,6))
+print(var)
+print(np.split(var, 2, axis=0))
+print(np.vsplit(var, 2))
+print('-'*100)
+print(np.split(var, (1,2,3), axis=0))
+print('-'*100)
+print(np.split(var, 2, axis=1))
+print(np.hsplit(var, 2))
+```
+
+`numpy.resize(array, shape)`
+`numpy.append(array, values, axis)`
+`numpy.insert(array, index, values, axis)`
+`numpy.delete(array, index, axis)`
+`numpy.unique(array, return_index, return_inverse, return_counts)`
+
+```python
+import numpy as np
+
+var = np.random.randint(0,4,(4,4))
+print(var)
+print(np.resize(var,(2,8)))
+print('-'*100)
+print(np.append(var,[[0,0,0,0]], axis=0))
+print('-'*100)
+print(np.insert(var,1,[100]))
+print(np.insert(var,1,100,axis=1))
+print('-'*100)
+print(np.delete(var,1,axis=1))
+print('-'*100)
+print(np.ravel(var))
+print(np.unique(var))
+print(np.unique(var, return_index=True))
+print(np.unique(var, return_inverse=True))
+print(np.unique(var, return_counts=True))	#返回统计数量
+```
+
+`numpy.around(array, decimals)`
+`numpy.floor()`
+`numpy.ceil()`
+
+```python
+import numpy as np
+
+var = np.arange(0,2,0.2)
+print(var)
+print(np.around(var,0))	#可以为负数
+print(np.floor(var))
+print(np.ceil(var))
+```
+
+
+
+### numpy.random.fun
+
+`numpy.random.randint`
+`numpy.random.randn`
+
+```python
+import numpy as np
+# keepdims使生成的结果为(1,2)而不是(2,)
+print(np.sum(np.random.randn(2,2), axis=0, keepdims=True))
+print(np.random.randint(0,4,(4,4)))
+```
+
+### numpy数据计算
+
+`numpy.add()`
+`numpy.subtract()`
+`numpy.multiply()`
+`numpy.divide()`
+形状相同，或符合广播规则
+
+`numpy.reciprocal()`: 倒数
+`numpy.power(array,	index)`
+`numpy.mod(array, num[array])`: 第二个参数符合广播规则
+
+### numpy数据统计
+
+`numpy.amin(a, axis)`: 按某个axis求最小值
+`numpy.amax(a, axis)`
+`numpy.ptp(a, axis)`: 最大值减最小值
+`numpy.percentile(a, q, axis)`
+`numpy.median(a, axis)`
+`numpy.average(a, weights,axis)`: 取加权平均
+`numpy.std(a,axis)`: 标准差
+`numpy.var(a,axis)`: 方差
+
+````python
+import numpy as np
+
+var = np.random.randint(0,8,(5,5))
+print(var)
+print(np.amin(var,axis=0))
+print(np.amax(var,axis=0))
+print(np.percentile(var, 50, axis=0))
+```
+第 p 个百分位数是这样一个值，它使得至少有 p% 的数据项小于或等于这个值，且至少有 (100-p)% 的数据项大于或等于这个值。
+举个例子：高等院校的入学考试成绩经常以百分位数的形式报告。比如，假设某个考生在入学考试中的语文部分的原始分数为 54 分。相对于参加同一考试的其他学生来说，他的成绩如何并不容易知道。但是如果原始分数54分恰好对应的是第70百分位数，我们就能知道大约70%的学生的考分比他低，而约30%的学生考分比他高。
+```
+print(np.median(var,axis=0))
+print(np.mean(var,axis=0))
+
+print(np.average(var, weights=[1,2,3,4,5], axis=0))
+````
+
+### numpy排序、条件筛选函数
+
+`numpy.sort(a, axis, kind, order)`:
+
+| 种类                      | 速度 | 最坏情况      | 工作空间 | 稳定性 |
+| :------------------------ | :--- | :------------ | :------- | :----- |
+| `'quicksort'`（快速排序） | 1    | `O(n^2)`      | 0        | 否     |
+| `'mergesort'`（归并排序） | 2    | `O(n*log(n))` | ~n/2     | 是     |
+| `'heapsort'`（堆排序）    | 3    | `O(n*log(n))` | 0        | 否     |
+
+```python
+import numpy as np
+
+dt = np.dtype([('alpha','S1'),('num', int)])
+var = np.array([('c',3),('a',1),('b',2)],dtype=dt)
+print(np.sort(var, order='alpha'))
+```
+
+`numpy.argsort`:返回的是数组值从小到大的索引值
+
+```python
+import numpy as np
+x = np.array([1,2,0])
+y = np.argsort(x)
+print(x[y])
+```
+
+`numpy.lexsort`: 对多个序列进行排序。排序时优先照顾靠后的列
+
+```python
+import numpy as np 
+ 
+nm =  ('raju','anil','ravi','amar') 
+dv =  ('f.y.',  's.y.',  's.y.',  'f.y.') 
+ind = np.lexsort((dv,nm))  
+print ('调用 lexsort() 函数：') 
+print (ind) 
+print ('\n') 
+print ('使用这个索引来获取排序后的数据：') 
+print ([nm[i]  +  ", "  + dv[i]  for i in ind])
+```
+
+`numpy.argmax()`
+`numpy.argmin()`
+`numpy.nonzero()`
+`numpy.where()`
+`numpy.extract()`
+
+```python
+import numpy as np
+x = np.random.randint(0,3,(4,4))
+print(x)
+print(np.nonzero(x))
+print(np.where(x!=0))
+print(np.extract(x!=0,x))
+```
+
+### numpy线性代数
+
+`numpy.dot()`: 点积（对一维数组），矩阵乘积（多维）
+`numpy.vdot()`: 究极点积，先展开再积
 
 # pandas_learning
 
