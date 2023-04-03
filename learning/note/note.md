@@ -1,3 +1,7 @@
+# 2023-04-03
+
+
+
 # 2023-04-02
 
 GRU：门控循环单元
@@ -16,7 +20,8 @@ Word2Vec、Skip-Gram、GloVe（没太懂。有些复杂）
 
 ## seq2seq
 
-Beam search
+Beam search algorithm
+Refinements to beam search 细化集束搜索
 
 # 2023-04-01
 
