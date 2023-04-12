@@ -14,4 +14,3 @@
 `tmux switch -t <session-name>`: 切换session
 
 `tmux rename-session -t <old-session-name> <new-session-name>`: 重命名session
-`ctrl+b $`
