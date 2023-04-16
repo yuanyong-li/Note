@@ -587,7 +587,7 @@ pd.read_excel
 fpath = './ex1data1.txt'
 # 设置参数
 data = pd.read_csv(
-    fpath,
+   fpath,
     sep=',',
     header=None,
     names=['x', 'y']
