@@ -101,6 +101,9 @@ print(y3, y3.requires_grad) # True
 
 y3.backward()
 print(x.grad)
+
+# 重置grad
+x.grad.data.zero_()
 ```
 
 ## DL_basics
@@ -308,6 +311,50 @@ for epoch in range(1, num_epochs + 1):
     print('epoch %d, loss: %f' % (epoch, l.item()))
 ```
 
+#### 实例
+
+```python
+%matplotlib inline
+import torch
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+import torch.nn
+
+input_features = 3
+X = torch.tensor(np.random.normal(0,1,(1000, input_features)), dtype=torch.float)
+true_w = torch.tensor([1, -1, 2], dtype=torch.float)
+true_b = 5
+y = torch.mm(X, true_w.view(-1,1))+true_b
+y += torch.tensor(np.random.normal(0, 0.01, size=y.size()),dtype=torch.float)
+print(X[0:5])
+loss = torch.nn.MSELoss()
+
+net = torch.nn.Sequential(torch.nn.Linear(input_features,1))
+optimizer = torch.optim.SGD(net.parameters() ,lr=0.03, weight_decay=0.1)
+
+batch_size = 50
+dataset = torch.utils.data.TensorDataset(X, y)
+data_iter = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True)
+
+torch.nn.init.normal_(net[0].weight, mean=0, std=0.01)
+torch.nn.init.constant_(net[0].bias, val=0)
+[i for i in net[0].parameters()]
+
+num_epochs = 30
+for epoch in range(1, num_epochs + 1):
+    for X, y in data_iter:
+        output = net(X)
+        l = loss(output, y.view(-1, 1))
+        optimizer.zero_grad() # 梯度清零，等价于net.zero_grad()
+        l.backward()
+        optimizer.step()
+    print('epoch %d, loss: %f' % (epoch, l.item()))
+print([i for i in net.parameters()])
+```
+
+
+
 ### 图像分类数据集(Fashion-MNIST)
 
 1. `torchvision.datasets`: 一些加载数据的函数及常用的数据集接口；
@@ -426,5 +473,287 @@ def train_ch3(net, train_iter, test_iter, loss, num_epochs, batch_size,
 train_ch3(net, train_iter, test_iter, cross_entropy, num_epochs, batch_size, [W, b], lr)
 ```
 
+### MLP
 
+```python
+%matplotlib inline
+import torch
+import numpy as np
+import matplotlib.pyplot as plt
+import d2lzh_pytorch as d2l
+
+num_inputs, num_outputs, num_hiddens = 784, 10, 256
+
+from collections import OrderedDict
+# 定义模型
+net = torch.nn.Sequential(OrderedDict([
+    ('flatten', d2l.FlattenLayer()),
+    ('Linear1', torch.nn.Linear(num_inputs, num_hiddens)),
+    ('ReLU1', torch.nn.ReLU()),
+    ('Linear2', torch.nn.Linear(num_hiddens, num_outputs))
+]))
+
+# 初始化参数
+for params in net.parameters():
+    torch.nn.init.normal_(params, mean=0, std=0.01)
+torch.nn.init.constant_(net[1].bias, val=0)
+torch.nn.init.constant_(net[3].bias, val=0)
+
+# 初始化数据loader以及优化器
+batch_size = 256
+train_iter, test_iter = d2l.load_data_fashion_mnist(batch_size)
+loss = torch.nn.CrossEntropyLoss()
+
+optimizer = torch.optim.SGD(net.parameters(), lr=0.5)
+num_epochs = 5
+d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, batch_size, None, None, optimizer)
+```
+
+### Weight Decay
+
+```python
+%matplotlib inline
+import torch
+import torch.nn as nn
+import numpy as np
+import d2lzh_pytorch as d2l
+
+num_inputs, num_outputs, num_hiddens1, num_hiddens2 = 784, 10, 256, 256
+drop_prob1, drop_prob2 = 0.2, 0.5
+net = nn.Sequential(
+        d2l.FlattenLayer(),
+        nn.Linear(num_inputs, num_hiddens1),
+        nn.ReLU(),
+        nn.Dropout(drop_prob1),
+        nn.Linear(num_hiddens1, num_hiddens2), 
+        nn.ReLU(),
+        nn.Dropout(drop_prob2),
+        nn.Linear(num_hiddens2, 10)
+        )
+for param in net.parameters():
+    nn.init.normal_(param, mean=0, std=0.01)
+
+print(net)
+
+optimizer = torch.optim.SGD(net.parameters(), lr=0.5)
+d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, batch_size, None, None, optimizer)
+```
+
+## DL_computation
+
+### model_construction
+
+#### 继承Module类
+
+```python
+import torch
+from torch import nn
+
+class MLP(nn.Module):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.hidden = nn.Linear(784, 256)
+        self.act = nn.ReLU()
+        self.output = nn.Linear(256, 10)
+    def forward(self, x):
+        a = self.act(self.hidden(x))
+        return self.output(a)
+net = MLP()
+```
+
+### Parameters
+
+```python
+import torch
+from torch import nn
+from torch.nn import init
+
+net = nn.Sequential(nn.Linear(4, 3), nn.ReLU(), nn.Linear(3, 1))  # pytorch已进行默认初始化
+
+print(net)
+# 查看某一层的参数
+print(net[2].state_dict())
+
+X = torch.rand(2, 4)
+Y = net(X).sum()
+
+# 访问模型参数
+print(type(net.named_parameters()))
+for name, param in net.named_parameters():
+    print(name, param.size())
+    
+print(net[0])
+
+# 初始化权重
+# 这里*表示解构，将原本的list的各个组成部分拆分
+print(*[(name, param.shape) for name, param in net[0].named_parameters()])
+for name, param in net.named_parameters():
+    if 'weight' in name:
+        init.normal_(param, mean=0, std=0.01)
+        print(name, param.data)
+    if 'bias' in name:
+        init.constant_(param, val=0)
+        print(name, param.data)
+        
+def init_normal_(m):
+    if type(m) == nn.Linear:
+        nn.init.normal_(m.weight, mean=0, std=0.01)
+        nn.init.zeros_(m.bias)
+# 对每一层都应用init_normal_函数
+net[0].apply(init_normal_)
+net.apply(init_normal_)
+
+net[0].weight.data[:] += 1
+```
+
+```python
+# 定义自定义初始化参数的方法
+def init_weight_(tensor):
+    with torch.no_grad():
+        tensor.uniform_(-10, 10)
+        tensor *= (tensor.abs() >= 5).float()
+
+for name, param in net.named_parameters():
+    if 'weight' in name:
+        init_weight_(param)
+        print(name, param.data)
+
+# 不影响梯度的修改方法
+for name, param in net.named_parameters():
+    if 'bias' in name:
+        param.data += 1
+        print(name, param.data)
+        
+# 同一对象共享参数
+linear = nn.Linear(1, 1, bias=False)
+net = nn.Sequential(linear, linear) 
+print(net)
+for name, param in net.named_parameters():
+    init.constant_(param, val=3)
+    print(name, param.data)
+```
+
+### 自定义层
+
+#### 不含模型参数的自定义层
+
+```python
+import torch
+from torch import nn
+
+class CenteredLayer(nn.Module):
+    def __init__(self, **kwargs):
+        super(CenteredLayer, self).__init__(**kwargs)
+    def forward(self, x):
+        return x - x.mean()
+    
+layer = CenteredLayer()
+layer(torch.tensor([1, 2, 3, 4, 5], dtype=torch.float))
+
+net = nn.Sequential(nn.Linear(8, 128), CenteredLayer())
+y = net(torch.rand(4, 8))
+y.mean().item()
+```
+
+#### 含模型参数的自定义层
+
+```python
+class MyDense(nn.Module):
+    def __init__(self):
+        super(MyDense, self).__init__()
+        self.params = nn.ParameterList([nn.Parameter(torch.randn(4, 4)) for i in range(3)])
+        self.params.append(nn.Parameter(torch.randn(4, 1)))
+        self.weight = nn.Parameter(torch.randn(4,4))
+        self.bias = nn.Parameter(torch.randn(4))
+
+    def forward(self, x):
+        for i in range(len(self.params)):
+            x = torch.mm(x, self.params[i])
+        return x
+net = MyDense()
+print(net)
+```
+
+### 读写
+
+存储单个tensor或list
+
+```python
+import torch
+from torch import nn
+from torch.nn import functional as F
+
+x = torch.arange(4)
+torch.save(x, 'x-file')
+
+x2 = torch.load('x-file')
+```
+
+存储MLP
+
+```python
+import torch
+from torch import nn
+
+class MLP(nn.Module):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.hidden = nn.Linear(784, 256)
+        self.act = nn.ReLU()
+        self.output = nn.Linear(256, 10)
+    def forward(self, x):
+        a = self.act(self.hidden(x))
+        return self.output(a)
+net = MLP()
+
+torch.save(net.state_dict(), 'mlp.params')
+clone = MLP()
+clone.load_state_dict(torch.load("mlp.params"))
+clone.eval()
+y_clone = clone(net)
+y_clone == y
+```
+
+### GPU
+
+```python
+import torch
+from torch import nn
+
+torch.device('cpu')
+torch.cuda.device('cuda')
+torch.cuda.device('cuda:1')
+torch.cuda.device_count()
+
+x = torch.rand(3,3, device='cuda:3')
+x.to(device = 'cuda:3')
+```
+
+## CNN
+
+### 卷积神经网络
+
+```python
+import torch
+from torch import nn
+
+
+# 为了方便起见，我们定义了一个计算卷积层的函数。
+# 此函数初始化卷积层权重，并对输入和输出提高和缩减相应的维数
+def comp_conv2d(conv2d, X):
+    # 这里的（1，1）表示批量大小和通道数都是1
+    print(X.shape)
+    X = X.reshape((1, 1) + X.shape)
+    Y = conv2d(X)
+    # 省略前两个维度：批量大小和通道
+    print(Y.shape)
+    return Y.reshape(Y.shape[2:])
+
+# 请注意，这里每边都填充了1行或1列，因此总共添加了2行或2列
+
+conv2d = nn.Conv2d(1, 1, kernel_size=3, padding=1, stride=2)
+comp_conv2d(conv2d, X).shape
+```
+
+### 现代卷积神经网络
 
