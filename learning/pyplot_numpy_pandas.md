@@ -573,7 +573,11 @@ print(np.extract(x!=0,x))
 ```python
 import numpy as np
 import pandas as pd
+
+pd.set_option("display.max_row", 100) # 设置显示多少行
 ```
+
+
 
 $ 标注涉及到python实用语法
 
@@ -609,6 +613,26 @@ s5 = s3.loc[1:4] # 按index返回
 s6 = s3.iloc[1:4] # 按行索引返回
 ```
 
+```python
+import numpy as np
+import pandas as pd
+
+nums = np.array([i for i in range(1,31)]).reshape(10,3)
+colu = [f'col_{i}' for i in range(3)]
+inde = [f'row_{i}' for i in range(10)]  
+pd.DataFrame(data=nums,index=inde,columns=colu)
+# data = pd.DataFrame(columns = ['input','output'], data = output_list[0:num])
+
+# 字符串转字典
+with open("./alpaca_data_chinese.json", "r", encoding="utf-8") as f:
+        for line in f.readlines():
+            content.append(line)
+print(content[0])
+print(eval(content[0]))
+```
+
+
+
 ## Pandas使用loc查询数据
 
 ```python
@@ -630,7 +654,7 @@ def query_my_data(df):
 df.loc[query_my_data, :]
 ```
 
-## Pandas新增数据列
+## Pandas数据列操作
 
 ```python
 # 1.直接赋值(字符串替换 + python变量类型转换)
@@ -656,6 +680,10 @@ df.loc[df['bWendu']-df['yWendu']>10, 'wencha_type'] = '温差大'
 df.loc[df['bWendu']-df['yWendu']<=10, 'wencha_type'] = '温差小'
 df.value_counts()
 ```
+
+### 删除列
+
+删除某列`df.drop(column_name, axis=1, inplace=True)`
 
 ## Pandas数据统计函数
 
@@ -959,4 +987,45 @@ df['percent'] = df.groupby(['date'])['value'].transform(lambda x: round(x / sum(
 df['change_percent'] = df.groupby(['label_type'])['percent'].transform(lambda x: round((x - np.mean(x)) * 100 / np.mean(x), 4))
 ```
 
-w
+```python
+# 读取excel并且对数据进行处理
+# df.str.startswith('str')
+# df.to_dict(orient="records")
+
+def xlsx2json(str_output):
+    data = pd.read_excel("prompt_data.xlsx")
+    # 删除有nan的行
+    data.dropna(axis=0, how='any', inplace=True)
+#     # 填充nan值
+#     data = data.fillna({'类型':''})
+    new_data = pd.DataFrame()
+    # new_data["input"] = "请判断下面对话是否存在问题，并具体指出是什么类型问题:\n对话输入为:"+data["输入"]+"\n对话输出为:"+data["输出"]
+    data["input"] = "对话输入为:"+data["输入"]+"对话输出为:"+data["输出"]
+    ok_rows = data['不合理/合理原因'].str.startswith('合理')
+    not_rows = data['不合理/合理原因'].str.startswith('合理') == False
+    data['output'] = ''
+    data['output'].loc[ok_rows] = data['不合理/合理原因'].loc[ok_rows]
+    data['output'].loc[not_rows] = '不合理，类型为'+data['类型'].loc[not_rows]+'；不合理原因为：'+data['不合理/合理原因'].loc[not_rows]
+    
+    for i in data[['input','output']].to_dict(orient="records"):
+        str_output += str(i) + "\n"
+    str_output = str_output.replace('"','')
+    str_output = str_output.replace('“','')
+    str_output = str_output.replace('”','')
+    str_output = str_output.replace('\'', '\"')
+    print(str_output)
+    with open("./prompt_data.json", "w", encoding="utf-8") as f:
+        f.write(str_output)
+```
+
+删除特定字符
+
+```
+def df2str(data):
+    data.replace("'",'',regex=True).replace('“','',regex=True).replace('”','',regex=True).replace('"','',regex=True)
+    str_output = ""
+    for i in data[['input','output']].to_dict(orient="records"):
+        str_output += str(i) + "\n"
+    return str_output
+```
+

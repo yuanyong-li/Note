@@ -6,7 +6,7 @@
 1131272948
 ```
 
-## 基础
+## 1. 基础
 
 ### Tensor
 
@@ -106,7 +106,7 @@ print(x.grad)
 x.grad.data.zero_()
 ```
 
-## DL_basics
+## 2. DL_basics
 
 ### 线性回归
 
@@ -173,7 +173,7 @@ def squared_loss(y_hat, y):
   return (y_hat - y.view(y_hat.size())) ** 2 / 2
 # sgd
 def sgd(params, lr, batch_size):
-  for params in params:
+  for param in params:
     # 希望修改param的值，但不影响反向传播，需要用到.data
     param.data -= lr * param.grad / batch_size
 ```
@@ -297,7 +297,7 @@ for param_group in optimizer.param_groups:
 
 #### 训练模型
 
-在使用Gluon训练模型时，我们通过调用`optim`实例的`step`函数来迭代模型参数。按照小批量随机梯度下降的定义，我们在`step`函数中指明批量大小，从而对批量中样本梯度求平均。
+在使用Gluon训练模型时，我们通过调用`optimizer`实例的`step`函数来迭代模型参数。按照小批量随机梯度下降的定义，我们在`step`函数中指明批量大小，从而对批量中样本梯度求平均。
 
 ```python
 num_epochs = 3
@@ -539,7 +539,7 @@ optimizer = torch.optim.SGD(net.parameters(), lr=0.5)
 d2l.train_ch3(net, train_iter, test_iter, loss, num_epochs, batch_size, None, None, optimizer)
 ```
 
-## DL_computation
+## 3. DL_computation
 
 ### model_construction
 
@@ -706,6 +706,7 @@ class MLP(nn.Module):
         return self.output(a)
 net = MLP()
 
+# 保存模型
 torch.save(net.state_dict(), 'mlp.params')
 clone = MLP()
 clone.load_state_dict(torch.load("mlp.params"))
@@ -729,9 +730,9 @@ x = torch.rand(3,3, device='cuda:3')
 x.to(device = 'cuda:3')
 ```
 
-## CNN
+## 4. CNN
 
-### 卷积神经网络
+### 4.1 卷积神经网络
 
 ```python
 import torch
@@ -755,5 +756,54 @@ conv2d = nn.Conv2d(1, 1, kernel_size=3, padding=1, stride=2)
 comp_conv2d(conv2d, X).shape
 ```
 
-### 现代卷积神经网络
+### 4.2 现代卷积神经网络
+
+#### 4.2.1 LeNet
+
+```python
+import os
+import time
+import torch
+from torch import nn, optim
+
+import sys
+sys.path.append("..") 
+import d2lzh_pytorch as d2l
+
+# control which GPUs are visible to an application.
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+# 检测cuda是否能用，否则用cpu
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+print(torch.__version__)
+print(device)
+```
+
+定义模型
+
+```python
+class LeNet(nn.Module):
+    def __init__(self):
+        super(LeNet, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(1, 6, 5), # in_channels, out_channels, kernel_size
+            nn.Sigmoid(),
+            nn.MaxPool2d(2, 2), # kernel_size, stride
+            nn.Conv2d(6, 16, 5),
+            nn.Sigmoid(),
+            nn.MaxPool2d(2, 2)
+        )
+        self.fc = nn.Sequential(
+            nn.Linear(16*4*4, 120),
+            nn.Sigmoid(),
+            nn.Linear(120, 84),
+            nn.Sigmoid(),
+            nn.Linear(84, 10)
+        )
+
+    def forward(self, img):
+        feature = self.conv(img)
+        output = self.fc(feature.view(img.shape[0], -1))
+        return output
+```
 
