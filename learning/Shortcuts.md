@@ -47,6 +47,8 @@ macos的terminal和termius都可以
 
 `cmd+,`: 打开当前App的偏好设置
 
+`cmd+option+v`: 剪切式粘贴
+
 ### 已掌握
 
 `cmd+c`, `cmd+x`, `cmd+v`

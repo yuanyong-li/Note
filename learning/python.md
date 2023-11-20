@@ -813,3 +813,35 @@ os.path.dirname(os.path.dirname(__file__))
 os.path.join(os.path.dirname(os.path.dirname(__file__)), 'other')
 ```
 
+## logging
+
+**日志级别等级排序**：critical > error > warning > info > debug
+
+### 设置日志显示级别
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+```
+
+### 日志信息写到文件
+
+```python
+import logging
+logging.basicConfig(filename='os.getcwd'+'example.log', level=logging.DEBUG)
+logging.debug('This message should go to the log file')
+```
+
+### 显示日期及更改显示消息格式
+
+```python
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S')
+```
+
+```python
+import logging
+logging.basicConfig(format=%(levelname)s:%(message)s', level=logging.DEBUG)
+```
+

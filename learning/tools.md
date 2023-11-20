@@ -6,7 +6,7 @@
 `tmux detach`: 离开session
 
 `tmux ls`: 查看session列表
-`ctrl + b s`
+`ctrl + b s`: 查看session列表
 
 `tmux attach -t <session-name>`: 进入session
 
@@ -19,7 +19,63 @@
 
 `tmux kill-session -t session_name`
 
+`ctrl+b [`: 开始翻页，`fn+上或下` `q` 退出
+
 # Anaconda
+
+## 安装
+
+`pip install ipykernel`
+
+`pip install jupyter`
+
+`pip install nb_conda`
+
+1.在base下安装 nb_conda_kernels
+
+```text
+conda activate base 
+conda install nb_conda_kernels
+```
+
+2.在env1下安装ipykernel
+
+```text
+conda activate env1
+conda install ipykernel
+```
+
+## 换源
+
+pip 换源
+`pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple`
+
+conda 换源
+
+```
+vim ~/.condarc
+#清华源
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+ssl_verify: true
+#中科大源
+channels:
+  - https://mirrors.ustc.edu.cn/anaconda/pkgs/main/
+  - https://mirrors.ustc.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.ustc.edu.cn/anaconda/cloud/conda-forge/
+ssl_verify: true
+#上交大源
+channels:
+  - https://mirrors.sjtug.sjtu.edu.cn/anaconda/pkgs/main/
+  - https://mirrors.sjtug.sjtu.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.sjtug.sjtu.edu.cn/anaconda/cloud/conda-forge/
+ssl_verify: true
+```
+
+## 使用
 
 `conda list`
 
@@ -31,6 +87,8 @@
 
 `conda env list`
 
+`conda create -n wukaqi（要创建的环境名字） --clone dualnet（原有的名字）`
+
 ## 配置远程连接
 
 `jupyter notebook password`
@@ -41,13 +99,13 @@
 
 ```python
 c.NotebookApp.open_browser = False#不需要自动打开火狐浏览器
-c.NotebookApp.port = 8890 #需要改
-c.NotebookApp.ip = '10.99.4.2' #需要改
-c.NotebookApp.notebook_dir = '/home/liyuanyong2022'
+c.NotebookApp.port = 1019 #需要改
+c.NotebookApp.ip = '10.93.0.201' #需要改
+c.NotebookApp.notebook_dir = '/home/huruihan2022'
 #设定默认打开的目录。
 c.NotebookApp.allow_remote_access = True
-#如今需要你之前设置的密码登录，填入下面的即可免密登录。(需要改)
-c.NotebookApp.token = 'argon2:$argon2id$v=19$m=10240,t=10,p=8$/s9zNT3+VpBX0M1aDwn+6g$jEYL//Lkmq2c0B5VmpwWL8ftxisfK001/GUBVJbIvdw'
+#如今需要你之前设置的密码登录，填入下面的即可免密登录。(需要改)去上一步设密码显示的json文件中去复制
+c.NotebookApp.token = 'argon2:$argon2id$v=19$m=10240,t=10,p=8$LnRYONADY4t7aBESfioLaw$X6VewrU2uPRxX4jymRFoGvCWnfdN1n+IjPaSltp98DE'
 ```
 
 `jupyter notebook &`
@@ -59,7 +117,13 @@ c.NotebookApp.token = 'argon2:$argon2id$v=19$m=10240,t=10,p=8$/s9zNT3+VpBX0M1aDw
 jupyter https://10.99.4.2:8890 密码为空
 ```
 
+### 超级大坑
 
+虚拟环境启动jupyter，却不是该环境kernel
+
+```
+python -m ipykernel install --user --name=虚拟环境名字
+```
 
 # Ubuntu Learning
 
@@ -192,6 +256,10 @@ kill -9
 
 * 删除分支
 * `git branch -D <name>`: 强制删除
+
+`git branch -D -r origin/windows`
+
+*   删除远程分支 `origin/windows`
 
 `git log --graph`
 
@@ -1204,7 +1272,7 @@ import transformers
 from transformers import AutoTokenizer
 ```
 
-## Docker
+# Docker
 
 ```
 # 添加docker用户组（已经有了）
@@ -1238,3 +1306,48 @@ docker exec -it test_api /bin/bash
 # 退出容器命令行
 CTRL+D
 ```
+
+# DeepSpeed
+
+```bash
+# 单卡的使用方法
+deepspeed --num_gpus=1 examples/pytorch/translation/run_translation.py ...
+# 单卡，并指定对应的GPU
+deepspeed --include localhost:3 examples/pytorch/translation/run_translation.py ...
+
+# 多GPU的使用方法1
+torch.distributed.run --nproc_per_node=2 your_program.py <normal cl args> --deepspeed ds_config.json
+# 多GPU的使用方法2
+deepspeed --num_gpus=2 your_program.py <normal cl args> --deepspeed ds_config.json
+
+# 多节点多卡方法1，需要在多个节点上手动启动
+python -m torch.distributed.run --nproc_per_node=8 --nnode=2 --node_rank=0 --master_addr=hostname1 --master_port=9901 your_program.py <normal cl args> --deepspeed ds_config.json
+# 多节点多卡方法2，需要创建一个 hostfile 文件，只需在一个节点上启动
+hostname1 slots=8
+hostname2 slots=8
+# 然后运行
+deepspeed --num_gpus 8 --num_nodes 2 --hostfile hostfile --master_addr hostname1 --master_port=9901 your_program.py <normal cl args> --deepspeed ds_config.json
+
+# 在SLURM上运行，略，参见原始文档
+# 在jupyter中运行，略，参见原始文档
+```
+
+# 实用工具
+
+## nvitop
+
+`pip install nvitop`
+
+`nvitop -m full`	 
+
+## captum
+
+```
+conda install captum -c pytorch
+
+# 或者
+git clone https://github.com/pytorch/captum.git
+cd captum
+pip install -e .
+```
+
